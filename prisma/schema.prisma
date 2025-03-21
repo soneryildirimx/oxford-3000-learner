@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String?
+  email         String?        @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  wordProgress  WordProgress[]
+}
+
+model Account {
+  id                String  @id @default(uuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String  @unique
+  access_token      String?
+  expires_at        Int?
+  id_token          String?
+  refresh_token     String?
+  scope             String?
+  session_state     String?
+  token_type        String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Word {
+  id           Int            @id @default(autoincrement())
+  tr           String
+  en           String
+  wordProgress WordProgress[]
+}
+
+model WordProgress {
+  id             String    @id @default(uuid())
+  userId         String
+  wordId         Int
+  status         String
+  attemptCount   Int       @default(0)
+  lastReviewedAt DateTime?
+  reviewCount    Int       @default(0)
+  word           Word      @relation(fields: [wordId], references: [id])
+  user           User      @relation(fields: [userId], references: [id])
+
+  @@unique([userId, wordId])
+}
